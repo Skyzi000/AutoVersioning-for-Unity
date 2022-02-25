@@ -1,0 +1,2 @@
+# AutoVersioning-for-Unity
+Gitを使って自動的にバージョン番号等を更新するためのライブラリ
