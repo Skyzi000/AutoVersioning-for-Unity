@@ -1,6 +1,7 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
+#nullable enable
 namespace Skyzi000.AutoVersioning.Runtime
 {
     /// <summary>
@@ -13,6 +14,6 @@ namespace Skyzi000.AutoVersioning.Runtime
         public int major, minor, patch, iosBuildNumber, androidBundleVersionCode;
 
         [ReadOnly]
-        public string hash;
+        public string? hash;
     }
 }

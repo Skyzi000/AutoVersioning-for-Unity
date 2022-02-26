@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using static Skyzi000.AutoVersioning.Editor.GitCommandExecutor;
 
+#nullable enable
 namespace Skyzi000.AutoVersioning.Editor
 {
     /// <summary>
@@ -29,7 +30,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoPatchNumberingEnabled => autoPatchNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("NumberingMethod"), Header("パッチ番号の自動化方法")]
+        [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of patch number")]
         public AutoVersioningMethod autoPatchNumberingMethod;
 
         [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"), MinValue(0), OnInspectorInit(nameof(LoadBundleVersion))]
@@ -43,7 +44,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoIosBuildNumberingEnabled => autoIosBuildNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("NumberingMethod"), Header("iOS用のBuild番号の自動化方法")]
+        [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of Build number for iOS")]
         public AutoVersioningMethod autoIosBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoIosBuildNumberingEnabled)), ReadOnly]
@@ -54,31 +55,43 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoAndroidBuildNumberingEnabled => autoAndroidBuildNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("NumberingMethod"), Header("Android用のBundle Version Codeの自動化方法")]
+        [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of Bundle Version Code for Android")]
         public AutoVersioningMethod autoAndroidBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoAndroidBuildNumberingEnabled)), ReadOnly]
         private int _androidBundleVersionCode;
 
-        [SerializeField, Header("現在のバージョン情報を自動的に保存するか")]
+        [SerializeField, Tooltip("Save the current version data at runtime.")]
         private bool autoSaveVersionData = true;
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Header("自動生成先パス"), ShowIfGroup(nameof(autoSaveVersionData))]
-        private string versionDataPath = "Assets/AutoVersioning/Runtime/Resources/VersionData.asset";
+        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Path to automatic generation"), ShowIfGroup(nameof(autoSaveVersionData))]
+        private string versionDataPath = $"{DirectoryPath}/Runtime/Resources/{nameof(VersionData)}.asset";
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Header("コミットのハッシュ値を保存するか")]
+        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Save the commit hash value")]
         private bool saveCommitHash = true;
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Header("コミットのハッシュ値を何文字目まで保存するか"),
-         InfoBox("Gitでは基本的に7文字に省略される"), ShowIf(nameof(saveCommitHash)), Range(1, 40, order = 1)]
+        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("How many characters to save the hash"),
+         InfoBox("In Git, it's basically abbreviated to 7 characters."), ShowIf(nameof(saveCommitHash)), Range(1, 40, order = 1)]
         private int saveHashLength = 7;
 
+        [SerializeField, Tooltip("Automatically save this setting when it is changed in the editor.")]
+        private bool autoSaveVersioningSettings = true;
+
         private bool IsDirty => EditorUtility.IsDirty(this);
+
+        private void OnEnable() => ApplyBuildNumbers();
+
+        private void OnValidate()
+        {
+            ApplyBuildNumbers();
+            if (autoSaveVersioningSettings)
+                SaveVersioningSettings();
+        }
 
         /// <summary>
         /// この設定のみを保存する
         /// </summary>
-        [Button(ButtonHeight = 50), EnableIf(nameof(IsDirty))]
+        [Button, EnableIf(nameof(IsDirty))]
         private void SaveVersioningSettings() => AssetDatabase.SaveAssetIfDirty(this);
 
         /// <summary>
@@ -144,7 +157,7 @@ namespace Skyzi000.AutoVersioning.Editor
             }
             catch (Exception e)
             {
-                Debug.LogError("バージョン番号を解釈できません");
+                Debug.LogError("Could not interpret the version number from bundleVersion.");
                 Debug.LogException(e);
             }
         }
@@ -158,10 +171,6 @@ namespace Skyzi000.AutoVersioning.Editor
             _androidBundleVersionCode = GetBuildNumber(autoIosBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode);
         }
 
-        private void OnEnable() => ApplyBuildNumbers();
-
-        private void OnValidate() => ApplyBuildNumbers();
-
         private VersionData SetData(VersionData data)
         {
             data.major = _major;
@@ -169,7 +178,7 @@ namespace Skyzi000.AutoVersioning.Editor
             data.patch = _patch;
             data.iosBuildNumber = _iosBuildNumber;
             data.androidBundleVersionCode = _androidBundleVersionCode;
-            data.hash = saveCommitHash ? GetCommitHash(saveHashLength) : string.Empty;
+            data.hash = saveCommitHash ? GetCommitHash(saveHashLength) : null;
             return data;
         }
 
@@ -187,7 +196,7 @@ namespace Skyzi000.AutoVersioning.Editor
             else
             {
                 CreateVersionData();
-                Debug.Log($"{nameof(VersionData)}が存在しなかったため新規作成: '{versionDataPath}'");
+                Debug.Log($"Create a new {nameof(VersionData)} since it did not exist: '{versionDataPath}'");
             }
         }
 
@@ -207,36 +216,36 @@ namespace Skyzi000.AutoVersioning.Editor
                 AutoVersioningMethod.None => defaultNumber,
                 AutoVersioningMethod.CountGitCommits => CountAllGitCommits(),
                 AutoVersioningMethod.CountGitCommitsFromLastVersionTag => CountGitCommitsFromTag("v[0-9]*"),
-                _ => throw new NotImplementedException()
+                _ => throw new ArgumentOutOfRangeException(nameof(numberingMethod))
             };
 
         /// <summary>
         /// アセット保存先パスを返す
         /// </summary>
-        private static string GetPath(string directoryPath = DirectoryPath) => Path.Combine(directoryPath ?? DirectoryPath, SettingsFileName);
+        private static string GetPath(string? directoryPath = DirectoryPath) => Path.Combine(directoryPath ?? DirectoryPath, SettingsFileName);
 
         /// <summary>
         /// この設定をファイルからロードして返す。見つからない場合はnull
         /// </summary>
-        public static VersioningSettings LoadSettings(string directoryPath = DirectoryPath) =>
+        public static VersioningSettings? LoadSettings(string? directoryPath = DirectoryPath) =>
             AssetDatabase.LoadAssetAtPath<VersioningSettings>(GetPath(directoryPath));
 
         /// <summary>
         /// この設定をファイルからロードして返す。見つからない場合は新規作成する
         /// </summary>
-        public static VersioningSettings LoadOrCreateSettings(string directoryPath = DirectoryPath) =>
+        public static VersioningSettings LoadOrCreateSettings(string? directoryPath = DirectoryPath) =>
             LoadSettings(directoryPath) ?? CreateSettings(directoryPath);
 
         /// <summary>
         /// この設定を新規作成する
         /// </summary>
-        public static VersioningSettings CreateSettings(string directoryPath = DirectoryPath)
+        public static VersioningSettings CreateSettings(string? directoryPath = DirectoryPath)
         {
             var path = GetPath(directoryPath);
             Directory.CreateDirectory(path);
             AssetDatabase.CreateAsset(CreateInstance<VersioningSettings>(), path);
-            Debug.Log($"{nameof(VersioningSettings)}を新規作成: '{path}'");
-            return LoadSettings(directoryPath);
+            Debug.Log($"Create a new {nameof(VersioningSettings)}: '{path}'");
+            return LoadSettings(directoryPath) ?? throw new InvalidOperationException($"Failed to create {nameof(VersioningSettings)}.");
         }
 
         /// <summary>

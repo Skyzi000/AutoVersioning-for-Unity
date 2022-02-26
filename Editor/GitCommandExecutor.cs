@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
-using UnityEditor;
 
+#nullable enable
 namespace Skyzi000.AutoVersioning.Editor
 {
     public static class GitCommandExecutor

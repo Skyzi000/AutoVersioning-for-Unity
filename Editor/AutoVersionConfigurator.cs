@@ -1,6 +1,7 @@
 ﻿using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
+#nullable enable
 namespace Skyzi000.AutoVersioning.Editor
 {
     public class AutoVersionConfigurator : IPreprocessBuildWithReport
@@ -9,7 +10,7 @@ namespace Skyzi000.AutoVersioning.Editor
 
         public void OnPreprocessBuild(BuildReport report)
         {
-            VersioningSettings versionSettings = VersioningSettings.LoadSettings();
+            VersioningSettings? versionSettings = VersioningSettings.LoadSettings();
             if (versionSettings != null)
                 versionSettings.LoadAndSaveAll();
         }
