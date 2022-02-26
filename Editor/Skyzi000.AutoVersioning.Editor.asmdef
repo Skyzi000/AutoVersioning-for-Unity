@@ -1,0 +1,16 @@
+{
+    "name": "Skyzi000.AutoVersioning.Editor",
+    "rootNamespace": "Skyzi000",
+    "references": [
+        "GUID:e8520b72e9ba1ce46b2da8c73b2e289a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

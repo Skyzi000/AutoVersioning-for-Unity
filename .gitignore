@@ -58,3 +58,6 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Data for runtime automatically generated based on versioning settings
+Runtime/Resources/
+Runtime/Resources.meta

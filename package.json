@@ -1,0 +1,16 @@
+{
+    "name": "jp.skyzi.auto-versioning",
+    "displayName": "AutoVersioning",
+    "description": "An asset for Unity to automatically update the version number using Git.",
+    "version": "1.0.0",
+    "unity": "2020.3",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Skyzi000/AutoVersioning-for-Unity.git"
+    },
+    "author": {
+        "name": "Skyzi000",
+        "url": "https://github.com/Skyzi000"
+    }
+}
