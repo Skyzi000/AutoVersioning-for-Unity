@@ -10,6 +10,6 @@ Note that this asset uses the paid asset Odin Inspector as an editor extension, 
 Requires Unity 2020.3+ and Odin Inspector
 
 1. Open Window > Package Manager
-2. Press the + button
+2. Press the + button in the upper left corner
 3. Select "Add package from git URL..."
 4. Enter `https://github.com/Skyzi000/AutoVersioning-for-Unity.git`
