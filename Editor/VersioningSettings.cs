@@ -30,7 +30,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoPatchNumberingEnabled => autoPatchNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of patch number")]
+        [SerializeField, LabelText("Patch Numbering"), Tooltip("Automated method of patch number")]
         public AutoVersioningMethod autoPatchNumberingMethod;
 
         [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"),
@@ -45,7 +45,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoIosBuildNumberingEnabled => autoIosBuildNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of Build number for iOS")]
+        [SerializeField, LabelText("iOS Build Numbering"), Tooltip("Automated method of Build number for iOS")]
         public AutoVersioningMethod autoIosBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoIosBuildNumberingEnabled)), ReadOnly]
@@ -56,7 +56,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoAndroidBuildNumberingEnabled => autoAndroidBuildNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of Bundle Version Code for Android")]
+        [SerializeField, LabelText("Bundle Version Code Numbering"), Tooltip("Automated method of Bundle Version Code for Android")]
         public AutoVersioningMethod autoAndroidBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoAndroidBuildNumberingEnabled)), ReadOnly]
@@ -68,7 +68,7 @@ namespace Skyzi000.AutoVersioning.Editor
         [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Path to automatic generation"), ShowIfGroup(nameof(autoSaveVersionData))]
         private string versionDataPath = $"{DirectoryPath}/Runtime/Resources/{nameof(VersionData)}.asset";
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Create a .gitignore to ignore the VersionData.")]
+        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Create a .gitignore to ignore the VersionData."), LabelText("Create .gitignore")]
         private bool createGitIgnoreForVersionData = true;
 
         [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Save the commit hash value")]
