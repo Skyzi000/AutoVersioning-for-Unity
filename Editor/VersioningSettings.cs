@@ -33,7 +33,8 @@ namespace Skyzi000.AutoVersioning.Editor
         [SerializeField, LabelText("NumberingMethod"), Tooltip("Automated method of patch number")]
         public AutoVersioningMethod autoPatchNumberingMethod;
 
-        [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"), MinValue(0), OnInspectorInit(nameof(LoadBundleVersion))]
+        [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"),
+         MinValue(0), OnInspectorInit(nameof(LoadBundleVersion))]
         private int _major, _minor;
 
         [ShowInInspector, HorizontalGroup("BundleVersion"), MinValue(0), DisableIf(nameof(AutoPatchNumberingEnabled))]
@@ -66,6 +67,9 @@ namespace Skyzi000.AutoVersioning.Editor
 
         [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Path to automatic generation"), ShowIfGroup(nameof(autoSaveVersionData))]
         private string versionDataPath = $"{DirectoryPath}/Runtime/Resources/{nameof(VersionData)}.asset";
+
+        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Create a .gitignore to ignore the VersionData.")]
+        private bool createGitIgnoreForVersionData = true;
 
         [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Save the commit hash value")]
         private bool saveCommitHash = true;
@@ -196,6 +200,8 @@ namespace Skyzi000.AutoVersioning.Editor
             else
             {
                 CreateVersionData();
+                if (createGitIgnoreForVersionData)
+                    CreateGitIgnoreFile(versionDataPath);
                 Debug.Log($"Create a new {nameof(VersionData)} since it did not exist: '{versionDataPath}'");
             }
         }
@@ -205,6 +211,30 @@ namespace Skyzi000.AutoVersioning.Editor
             VersionData data = SetData(CreateInstance<VersionData>());
             Directory.CreateDirectory(versionDataPath);
             AssetDatabase.CreateAsset(data, versionDataPath);
+        }
+
+        /// <summary>
+        /// 指定のファイルを無視する.gitignoreファイルを生成する<br/>
+        /// そのファイルがResources以下の場合は、Resourcesに.gitignoreが入らないようResourcesと同階層に生成する
+        /// </summary>
+        private static async void CreateGitIgnoreFile(string ignorePath)
+        {
+            var resourcesPathIndex = ignorePath.IndexOf("Resources", StringComparison.Ordinal);
+            if (resourcesPathIndex != -1)
+            {
+                var gitIgnore = new FileInfo($"{ignorePath.Substring(0, resourcesPathIndex)}.gitignore");
+                using StreamWriter ignoreWriter = gitIgnore.CreateText();
+                await ignoreWriter.WriteLineAsync(ignorePath.Substring(resourcesPathIndex)).ConfigureAwait(false);
+                await ignoreWriter.WriteLineAsync($"{ignorePath.Substring(resourcesPathIndex)}.meta").ConfigureAwait(false);
+            }
+            else
+            {
+                var gitIgnore = new FileInfo(
+                    Path.Combine(Path.GetDirectoryName(ignorePath) ?? throw new ArgumentNullException(nameof(ignorePath)), ".gitignore"));
+                using StreamWriter ignoreWriter = gitIgnore.CreateText();
+                await ignoreWriter.WriteLineAsync(Path.GetFileName(ignorePath)).ConfigureAwait(false);
+                await ignoreWriter.WriteLineAsync($"{Path.GetFileName(ignorePath)}.meta").ConfigureAwait(false);
+            }
         }
 
         /// <summary>
