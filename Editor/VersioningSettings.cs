@@ -62,6 +62,9 @@ namespace Skyzi000.AutoVersioning.Editor
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoAndroidBuildNumberingEnabled)), ReadOnly]
         private int _androidBundleVersionCode;
 
+        [SerializeField, Tooltip("Patterns of tags to be covered by the CountGitCommitsFromLastVersionTag method.")]
+        private string gitTagPattern = "*[0-9].[0-9]*";
+
         [SerializeField, Tooltip("Save the current version data at runtime.")]
         private bool autoSaveVersionData = true;
 
@@ -157,7 +160,7 @@ namespace Skyzi000.AutoVersioning.Editor
             try
             {
                 (_major, _minor, _patch) = ParseBundleVersion();
-                _patch = GetBuildNumber(autoPatchNumberingMethod, _patch);
+                _patch = GetBuildNumber(autoPatchNumberingMethod, _patch, gitTagPattern);
             }
             catch (Exception e)
             {
@@ -171,8 +174,8 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         private void ApplyBuildNumbers()
         {
-            _iosBuildNumber = GetBuildNumber(autoIosBuildNumberingMethod, int.Parse(PlayerSettings.iOS.buildNumber));
-            _androidBundleVersionCode = GetBuildNumber(autoIosBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode);
+            _iosBuildNumber = GetBuildNumber(autoIosBuildNumberingMethod, int.Parse(PlayerSettings.iOS.buildNumber), gitTagPattern);
+            _androidBundleVersionCode = GetBuildNumber(autoIosBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode, gitTagPattern);
         }
 
         private VersionData SetData(VersionData data)
@@ -240,12 +243,12 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <summary>
         /// バージョン番号の自動化方法に基づいてビルド番号を取得する
         /// </summary>
-        public static int GetBuildNumber(AutoVersioningMethod numberingMethod, int defaultNumber) =>
+        public static int GetBuildNumber(AutoVersioningMethod numberingMethod, int defaultNumber, string tagPattern) =>
             numberingMethod switch
             {
                 AutoVersioningMethod.None => defaultNumber,
                 AutoVersioningMethod.CountGitCommits => CountAllGitCommits(),
-                AutoVersioningMethod.CountGitCommitsFromLastVersionTag => CountGitCommitsFromTag("v[0-9]*"),
+                AutoVersioningMethod.CountGitCommitsFromLastVersionTag => CountGitCommitsFromTag(tagPattern),
                 _ => throw new ArgumentOutOfRangeException(nameof(numberingMethod))
             };
 
