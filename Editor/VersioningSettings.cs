@@ -90,6 +90,7 @@ namespace Skyzi000.AutoVersioning.Editor
 
         private void OnValidate()
         {
+            LoadBundleVersion();
             ApplyBuildNumbers();
             if (autoSaveVersioningSettings)
                 SaveVersioningSettings();
