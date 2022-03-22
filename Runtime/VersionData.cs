@@ -10,6 +10,11 @@ namespace Skyzi000.AutoVersioning.Runtime
     /// </summary>
     public class VersionData : ScriptableObject
     {
+        /// <summary>
+        /// デフォルトの生成位置であることを前提として、VersionDataを読み込む
+        /// </summary>
+        public static VersionData Default => Resources.Load<VersionData>(nameof(VersionData));
+
         [ReadOnly]
         public int major, minor, patch, iosBuildNumber, androidBundleVersionCode;
 
