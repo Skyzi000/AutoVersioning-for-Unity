@@ -1,5 +1,8 @@
 # AutoVersioning for Unity
 
+[![GitHub package.json version](https://img.shields.io/github/package-json/v/Skyzi000/AutoVersioning-for-Unity)](https://github.com/Skyzi000/AutoVersioning-for-Unity/tags)
+[![GitHub License](https://img.shields.io/github/license/Skyzi000/AutoVersioning-for-Unity)](https://github.com/Skyzi000/AutoVersioning-for-Unity/blob/main/LICENSE.md)
+
 An asset for Unity to automatically update the version number using Git.
 
 It was created with the goal of automatically giving consistent version numbers based on Git history, regardless of whether it is a remote build (e.g. GitLab CI) or a local build.
