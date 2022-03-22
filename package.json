@@ -2,7 +2,7 @@
     "name": "jp.skyzi.auto-versioning",
     "displayName": "AutoVersioning",
     "description": "An asset for Unity to automatically update the version number using Git.",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "unity": "2020.3",
     "license": "MIT",
     "repository": {
