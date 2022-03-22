@@ -1,7 +1,10 @@
-﻿using System;
+﻿#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
+using System;
 using System.IO;
 using System.Linq;
-using Sirenix.OdinInspector;
 using Skyzi000.AutoVersioning.Runtime;
 using UnityEditor;
 using UnityEngine;
@@ -30,14 +33,24 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoPatchNumberingEnabled => autoPatchNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("Patch Numbering"), Tooltip("Automated method of patch number")]
+#if ODIN_INSPECTOR
+        [LabelText("Patch Numbering"), SerializeField, Tooltip("Automated method of patch number")]
+#endif
         public AutoVersioningMethod autoPatchNumberingMethod;
 
+#if ODIN_INSPECTOR
         [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"),
          MinValue(0), OnInspectorInit(nameof(LoadBundleVersion))]
+#else
+        [SerializeField, Min(0)]
+#endif
         private int _major, _minor;
 
+#if ODIN_INSPECTOR
         [ShowInInspector, HorizontalGroup("BundleVersion"), MinValue(0), DisableIf(nameof(AutoPatchNumberingEnabled))]
+#else
+        [SerializeField, Min(0)]
+#endif
         private int _patch;
 
         /// <summary>
@@ -45,10 +58,16 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoIosBuildNumberingEnabled => autoIosBuildNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("iOS Build Numbering"), Tooltip("Automated method of Build number for iOS")]
+#if ODIN_INSPECTOR
+        [LabelText("iOS Build Numbering"), SerializeField, Tooltip("Automated method of Build number for iOS")]
+#endif
         public AutoVersioningMethod autoIosBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
+#if ODIN_INSPECTOR
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoIosBuildNumberingEnabled)), ReadOnly]
+#else
+        [SerializeField, Min(0)]
+#endif
         private int _iosBuildNumber;
 
         /// <summary>
@@ -56,10 +75,16 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoAndroidBuildNumberingEnabled => autoAndroidBuildNumberingMethod != AutoVersioningMethod.None;
 
-        [SerializeField, LabelText("Bundle Version Code Numbering"), Tooltip("Automated method of Bundle Version Code for Android")]
+#if ODIN_INSPECTOR
+        [LabelText("Bundle Version Code Numbering"), SerializeField, Tooltip("Automated method of Bundle Version Code for Android")]
+#endif
         public AutoVersioningMethod autoAndroidBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
+#if ODIN_INSPECTOR
         [ShowInInspector, MinValue(0), ShowIf(nameof(AutoAndroidBuildNumberingEnabled)), ReadOnly]
+#else
+        [SerializeField, Min(0)]
+#endif
         private int _androidBundleVersionCode;
 
         [SerializeField, Tooltip("Patterns of tags to be covered by the CountGitCommitsFromLastVersionTag method.")]
@@ -68,17 +93,25 @@ namespace Skyzi000.AutoVersioning.Editor
         [SerializeField, Tooltip("Save the current version data at runtime.")]
         private bool autoSaveVersionData = true;
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Path to automatic generation"), ShowIfGroup(nameof(autoSaveVersionData))]
+#if ODIN_INSPECTOR
+        [BoxGroup("autoSaveVersionData/VersionData"), ShowIfGroup(nameof(autoSaveVersionData)), SerializeField, Tooltip("Path to automatic generation")]
+#endif
         private string versionDataPath = $"{DirectoryPath}/Runtime/Resources/{nameof(VersionData)}.asset";
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Create a .gitignore to ignore the VersionData."), LabelText("Create .gitignore")]
+#if ODIN_INSPECTOR
+        [BoxGroup("autoSaveVersionData/VersionData"), LabelText("Create .gitignore"), SerializeField, Tooltip("Create a .gitignore to ignore the VersionData.")]
+#endif
         private bool createGitIgnoreForVersionData = true;
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("Save the commit hash value")]
+#if ODIN_INSPECTOR
+        [BoxGroup("autoSaveVersionData/VersionData"), SerializeField, Tooltip("Save the commit hash value")]
+#endif
         private bool saveCommitHash = true;
 
-        [SerializeField, BoxGroup("autoSaveVersionData/VersionData"), Tooltip("How many characters to save the hash"),
-         InfoBox("In Git, it's basically abbreviated to 7 characters."), ShowIf(nameof(saveCommitHash)), Range(1, 40, order = 1)]
+#if ODIN_INSPECTOR
+        [BoxGroup("autoSaveVersionData/VersionData"), InfoBox("In Git, it's basically abbreviated to 7 characters."), ShowIf(nameof(saveCommitHash)),
+         SerializeField, Tooltip("How many characters to save the hash"), Range(1, 40, order = 1)]
+#endif
         private int saveHashLength = 7;
 
         [SerializeField, Tooltip("Automatically save this setting when it is changed in the editor.")]
@@ -99,16 +132,20 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <summary>
         /// この設定のみを保存する
         /// </summary>
+#if ODIN_INSPECTOR
         [Button, EnableIf(nameof(IsDirty))]
+#endif
         private void SaveVersioningSettings() => AssetDatabase.SaveAssetIfDirty(this);
 
         /// <summary>
         /// <see cref="PlayerSettings"/>をProjectSettings.assetに書き込み、保存する
         /// </summary>
+#if ODIN_INSPECTOR
         [Button]
+#endif
         private void SavePlayerSettings()
         {
-            PlayerSettings.bundleVersion = $"{_major}.{_minor}.{_patch}";
+            PlayerSettings.bundleVersion = $"{_major.ToString()}.{_minor.ToString()}.{_patch.ToString()}";
             if (AutoIosBuildNumberingEnabled)
                 PlayerSettings.iOS.buildNumber = _iosBuildNumber.ToString();
             if (AutoAndroidBuildNumberingEnabled)
@@ -275,6 +312,13 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public static VersioningSettings CreateSettings(string? directoryPath = DirectoryPath)
         {
+#if !ODIN_INSPECTOR
+            Debug.LogWarning(
+                "OdinInspector is not found in this project.\n" +
+                "To use AutoVersioning conveniently, OdinInspector must be installed.\n" +
+                "Without OdinInspector, the UI for VersioningSettings and VersionData in the Inspector will be inconvenient, " +
+                "but the main functionality will not be affected.");
+#endif
             var path = GetPath(directoryPath);
             Directory.CreateDirectory(path);
             AssetDatabase.CreateAsset(CreateInstance<VersioningSettings>(), path);
