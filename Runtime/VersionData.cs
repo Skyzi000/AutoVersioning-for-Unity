@@ -20,15 +20,11 @@ namespace Skyzi000.AutoVersioning.Runtime
 
 #if ODIN_INSPECTOR
         [ReadOnly]
-#else
-        [HideInInspector]
 #endif
         public int major, minor, patch, iosBuildNumber, androidBundleVersionCode;
 
 #if ODIN_INSPECTOR
         [ReadOnly]
-#else
-        [HideInInspector]
 #endif
         public string? hash;
 
