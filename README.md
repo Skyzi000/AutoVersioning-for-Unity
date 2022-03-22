@@ -4,10 +4,13 @@ An asset for Unity to automatically update the version number using Git.
 
 It was created with the goal of automatically giving consistent version numbers based on Git history, regardless of whether it is a remote build (e.g. GitLab CI) or a local build.
 
-Note that this asset uses the paid asset Odin Inspector as an editor extension, so you will need to either install Odin Inspector or modify this code to not use it.
+AutoVersioning version 1.6.0 and above now works without the paid asset OdinInspector!
 
-# Install
-Requires Unity 2020.3+ and Odin Inspector
+Without OdinInspector, the UI for VersioningSettings and VersionData in the Inspector will be inconvenient, but the main functionality will not be affected.
+
+## Install
+
+Unity 2020.3 or higher is required
 
 1. Open Window > Package Manager
 2. Press the + button in the upper left corner
@@ -17,6 +20,6 @@ Requires Unity 2020.3+ and Odin Inspector
 
 4. Enter `https://github.com/Skyzi000/AutoVersioning-for-Unity.git`
 
-# Settings
+## Settings
 
 ![image](https://user-images.githubusercontent.com/38061609/155865728-b91b6e67-4d89-4b49-a4aa-ab2eed0c0d58.png)
