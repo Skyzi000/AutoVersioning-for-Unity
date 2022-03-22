@@ -126,16 +126,21 @@ namespace Skyzi000.AutoVersioning.Editor
         // ReSharper disable once UnusedMember.Local
         private bool IsDirty => EditorUtility.IsDirty(this);
 
+#if !ODIN_INSPECTOR
+        [SerializeField]
+#endif
+        private bool warnIfOdinInspectorMissing = true;
+
         private void OnEnable() => ApplyBuildNumbers();
 
         private void OnValidate()
         {
 #if !ODIN_INSPECTOR
-            Debug.LogWarning(
-                "OdinInspector is not found in this project.\n" +
-                "To use AutoVersioning conveniently, OdinInspector must be installed.\n" +
-                "Without OdinInspector, the UI for VersioningSettings and VersionData in the Inspector will be inconvenient, " +
-                "but the main functionality will not be affected.");
+            if (warnIfOdinInspectorMissing)
+                Debug.LogWarning("OdinInspector is not found in this project.\n" +
+                                 "To use AutoVersioning conveniently, OdinInspector must be installed.\n" +
+                                 "Without OdinInspector, the UI for VersioningSettings and VersionData in the Inspector will be inconvenient, " +
+                                 "but the main functionality will not be affected.");
 #endif
             LoadBundleVersion();
             ApplyBuildNumbers();
