@@ -129,7 +129,9 @@ namespace Skyzi000.AutoVersioning.Editor
 #if !ODIN_INSPECTOR
         [SerializeField]
 #endif
+#pragma warning disable CS0414
         private bool warnIfOdinInspectorMissing = true;
+#pragma warning restore CS0414
 
         private void OnEnable() => ApplyBuildNumbers();
 
