@@ -15,5 +15,11 @@ namespace Skyzi000.AutoVersioning.Runtime
 
         [ReadOnly]
         public string? hash;
+
+        [ShowInInspector]
+        public string BundleVersion => $"{major.ToString()}.{minor.ToString()}.{patch.ToString()}";
+
+        [ShowInInspector]
+        public string BundleVersionWithHash => $"{BundleVersion}{(string.IsNullOrEmpty(hash) ? string.Empty : $" ({hash})")}";
     }
 }
