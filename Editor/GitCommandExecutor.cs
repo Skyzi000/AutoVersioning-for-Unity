@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using Debug = UnityEngine.Debug;
 
 #nullable enable
 namespace Skyzi000.AutoVersioning.Editor
@@ -93,7 +94,24 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <param name="commands">gitのサブコマンドやオプション</param>
         /// <returns>標準出力</returns>
         /// <exception cref="InvalidOperationException">実行できなかった場合や、Gitが正常終了しなかった場合</exception>
-        public string GitExec(string commands) => GitExec(commands, GitPath);
+        public string GitExec(string commands)
+        {
+            try
+            {
+                return GitExec(commands, GitPath);
+            }
+            catch (Exception)
+            {
+                if (GitPath == DefaultGitPath)
+                {
+                    Debug.LogWarning("Failed to execute Git. Please make sure you have installed Git and added Path.");
+                    throw;
+                }
+
+                Debug.LogWarning("Failed to execute Git. Retrying with default Git path.");
+                return GitExec(commands, DefaultGitPath);
+            }
+        }
 
         /// <inheritdoc cref="GitExec(string)"/>
         public static string GitExec(string commands, string gitPath)
