@@ -51,13 +51,8 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </remarks>
         public int CountAllGitCommits()
         {
-            var output = GitExec(@"log --oneline").Trim('\n', ' ');
-            var count = 0;
-            // ReSharper disable once ForeachCanBeConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var c in output)
-                if (c == '\n')
-                    count++;
-            return count;
+            var output = GitExec(@"rev-list --count HEAD");
+            return int.TryParse(output, out var count) ? count : 0;
         }
 
         /// <summary>
