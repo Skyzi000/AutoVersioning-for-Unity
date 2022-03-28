@@ -8,7 +8,6 @@ using System.Linq;
 using Skyzi000.AutoVersioning.Runtime;
 using UnityEditor;
 using UnityEngine;
-using static Skyzi000.AutoVersioning.Editor.GitCommandExecutor;
 
 #nullable enable
 namespace Skyzi000.AutoVersioning.Editor
@@ -88,6 +87,14 @@ namespace Skyzi000.AutoVersioning.Editor
         [SerializeField, Tooltip("Patterns of tags to be covered by the CountGitCommitsFromLastVersionTag method.")]
         private string gitTagPattern = "*[0-9].[0-9]*";
 
+#if ODIN_INSPECTOR
+        [SerializeField, Tooltip("The path to the git executable, just \"git\" if you have already added it to Path."),
+         ValidateInput(nameof(ValidateGitPath))]
+#else
+        [SerializeField, Tooltip("The path to the git executable, just \"git\" if you have already added it to Path.")]
+#endif
+        private string gitPath = GitCommandExecutor.DefaultGitPath;
+
         [SerializeField, Tooltip("Save the current version data at runtime.")]
         private bool autoSaveVersionData = true;
 
@@ -123,13 +130,47 @@ namespace Skyzi000.AutoVersioning.Editor
         [SerializeField, Tooltip("Automatically save this setting when it is changed in the editor.")]
         private bool autoSaveVersioningSettings = true;
 
+#if ODIN_INSPECTOR
+        [ShowInInspector, ReadOnly]
+#endif
+        private string GitVersion
+        {
+            get
+            {
+                try
+                {
+                    return _gitExecutor.GitExec("--version").Replace("git version ", "");
+                }
+                catch (Exception)
+                {
+                    Debug.LogError("Git not found. Please install Git and set the path.");
+                    return "Git not found.";
+                }
+            }
+        }
+
+
         // ReSharper disable once UnusedMember.Local
         private bool IsDirty => EditorUtility.IsDirty(this);
 
+        private GitCommandExecutor GitExecutor
+        {
+            get
+            {
+                ValidateAndApplyGitPath();
+                return _gitExecutor;
+            }
+        }
+
+        private readonly GitCommandExecutor _gitExecutor = new GitCommandExecutor();
+
 #if !ODIN_INSPECTOR
         [SerializeField]
+#else
+        [SerializeField, HideInInspector]
 #endif
 #pragma warning disable CS0414
+        // ReSharper disable once NotAccessedField.Local
         private bool warnIfOdinInspectorMissing = true;
 #pragma warning restore CS0414
 
@@ -148,6 +189,30 @@ namespace Skyzi000.AutoVersioning.Editor
             ApplyBuildNumbers();
             if (autoSaveVersioningSettings)
                 SaveVersioningSettings();
+        }
+
+        /// <summary>
+        /// <see cref="gitPath"/>を検証し、使えるなら適用する
+        /// </summary>
+        /// <returns>使えるか、既に適用済みならtrue</returns>
+        private bool ValidateAndApplyGitPath()
+        {
+            if (_gitExecutor.GitPath == gitPath)
+                return true;
+            if (!ValidateGitPath())
+                return false;
+            _gitExecutor.GitPath = gitPath;
+            return true;
+        }
+
+        /// <summary>
+        /// <inheritdoc cref="GitCommandExecutor.ValidateGitPath"/>
+        /// </summary>
+        private bool ValidateGitPath()
+        {
+            if (string.IsNullOrWhiteSpace(gitPath))
+                gitPath = GitCommandExecutor.DefaultGitPath;
+            return GitCommandExecutor.ValidateGitPath(gitPath);
         }
 
         /// <summary>
@@ -244,7 +309,7 @@ namespace Skyzi000.AutoVersioning.Editor
             data.patch = _patch;
             data.iosBuildNumber = _iosBuildNumber;
             data.androidBundleVersionCode = _androidBundleVersionCode;
-            data.hash = saveCommitHash ? GetCommitHash(saveHashLength) : null;
+            data.hash = saveCommitHash ? GitExecutor.GetCommitHash(saveHashLength) : null;
             return data;
         }
 
@@ -302,12 +367,12 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <summary>
         /// バージョン番号の自動化方法に基づいてビルド番号を取得する
         /// </summary>
-        public static int GetBuildNumber(AutoVersioningMethod numberingMethod, int defaultNumber, string tagPattern) =>
+        public int GetBuildNumber(AutoVersioningMethod numberingMethod, int defaultNumber, string tagPattern) =>
             numberingMethod switch
             {
                 AutoVersioningMethod.None => defaultNumber,
-                AutoVersioningMethod.CountGitCommits => CountAllGitCommits(),
-                AutoVersioningMethod.CountGitCommitsFromLastVersionTag => CountGitCommitsFromTag(tagPattern),
+                AutoVersioningMethod.CountGitCommits => GitExecutor.CountAllGitCommits(),
+                AutoVersioningMethod.CountGitCommitsFromLastVersionTag => GitExecutor.CountGitCommitsFromTag(tagPattern),
                 _ => throw new ArgumentOutOfRangeException(nameof(numberingMethod))
             };
 

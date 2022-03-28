@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -6,14 +7,48 @@ using System.Text.RegularExpressions;
 #nullable enable
 namespace Skyzi000.AutoVersioning.Editor
 {
-    public static class GitCommandExecutor
+    public class GitCommandExecutor
     {
-        private const string DefaultGitPath = "git";
+        public const string DefaultGitPath = "git";
 
         /// <summary>
-        /// 全コミット数を数えて返す
+        /// Git実行ファイルへのパス
         /// </summary>
-        public static int CountAllGitCommits()
+        public string GitPath { get; set; }
+
+        public GitCommandExecutor(string gitPath = DefaultGitPath)
+        {
+            GitPath = gitPath;
+        }
+
+        /// <summary>
+        /// Git実行ファイルへのパスが使えるか検証する
+        /// </summary>
+        /// <param name="gitPath">検証するパス</param>
+        /// <returns>使えるならtrue"</returns>
+        public static bool ValidateGitPath(string gitPath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(gitPath) || !GitExec(@"--version", gitPath).Contains("git version"))
+                    return false;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is Win32Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// GitのHEADまでのコミット数を返す
+        /// </summary>
+        /// <remarks>
+        /// v1.7までは<code>git log --oneline</code>の最終行を除いた改行文字数<br/><br/>
+        /// v1.8からは<code>git rev-list --count HEAD</code>の出力
+        /// </remarks>
+        public int CountAllGitCommits()
         {
             var output = GitExec(@"log --oneline").Trim('\n', ' ');
             var count = 0;
@@ -28,7 +63,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// パターンに合致する直近のタグからのコミット数を返す
         /// </summary>
         /// <param name="tagRegex">タグのパターン(例: v[0-9].*)</param>
-        public static int CountGitCommitsFromTag(string tagRegex)
+        public int CountGitCommitsFromTag(string tagRegex)
         {
             var matchedTags = GitExec($"tag --list \"{tagRegex}\"");
             if (string.IsNullOrEmpty(matchedTags))
@@ -44,7 +79,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <param name="length">ハッシュ値の長さ。0~40が有効、7でgitの`--format=%h`指定に相当</param>
         /// <param name="commit">指定するコミット。デフォルトは"HEAD"</param>
         /// <exception cref="ArgumentOutOfRangeException">Gitから帰ってきたハッシュ値か、引数<see cref="length"/>の値がおかしい場合</exception>
-        public static string GetCommitHash(int length = 7, string commit = "HEAD")
+        public string GetCommitHash(int length = 7, string commit = "HEAD")
         {
             var hash = GitExec($"show \"{commit}\" --format=%H -s").Trim();
             if (0 > length || length > hash.Length)
@@ -56,10 +91,12 @@ namespace Skyzi000.AutoVersioning.Editor
         /// Gitコマンドを実行して結果を返す
         /// </summary>
         /// <param name="commands">gitのサブコマンドやオプション</param>
-        /// <param name="gitPath">Gitの実行ファイルへのパス、Pathが通っているなら"git"のみで大丈夫</param>
         /// <returns>標準出力</returns>
         /// <exception cref="InvalidOperationException">実行できなかった場合や、Gitが正常終了しなかった場合</exception>
-        public static string GitExec(string commands, string gitPath = DefaultGitPath)
+        public string GitExec(string commands) => GitExec(commands, GitPath);
+
+        /// <inheritdoc cref="GitExec(string)"/>
+        public static string GitExec(string commands, string gitPath)
         {
             var startInfo = new ProcessStartInfo
             {
