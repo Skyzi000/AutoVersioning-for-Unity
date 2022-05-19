@@ -185,7 +185,6 @@ namespace Skyzi000.AutoVersioning.Editor
                                  "Without OdinInspector, the UI for VersioningSettings and VersionData in the Inspector will be inconvenient, " +
                                  "but the main functionality will not be affected.");
 #endif
-            LoadBundleVersion();
             ApplyBuildNumbers();
             if (autoSaveVersioningSettings)
                 SaveVersioningSettings();
