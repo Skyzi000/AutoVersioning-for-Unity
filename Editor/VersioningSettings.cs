@@ -298,7 +298,7 @@ namespace Skyzi000.AutoVersioning.Editor
         private void ApplyBuildNumbers()
         {
             _iosBuildNumber = GetBuildNumber(autoIosBuildNumberingMethod, int.Parse(PlayerSettings.iOS.buildNumber), gitTagPattern);
-            _androidBundleVersionCode = GetBuildNumber(autoIosBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode, gitTagPattern);
+            _androidBundleVersionCode = GetBuildNumber(autoAndroidBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode, gitTagPattern);
         }
 
         private VersionData SetData(VersionData data)
