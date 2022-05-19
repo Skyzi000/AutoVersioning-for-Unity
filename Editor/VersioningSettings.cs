@@ -28,9 +28,16 @@ namespace Skyzi000.AutoVersioning.Editor
         private static string SettingsFileName => $"{nameof(VersioningSettings)}.asset";
 
         /// <summary>
+        /// 前回より小さい値を入力した場合の警告メッセージ
+        /// </summary>
+        private const string SetSmallerNumberWarnMessage = "It's smaller than the last number, is that okay?";
+
+        /// <summary>
         /// パッチ番号の自動化が有効か
         /// </summary>
         public bool AutoPatchNumberingEnabled => autoPatchNumberingMethod != AutoVersioningMethod.None;
+
+        private bool CanManualChangePatchNumber => !AutoPatchNumberingEnabled && !autoLoading;
 
 #if ODIN_INSPECTOR
         [LabelText("Patch Numbering"), SerializeField, Tooltip("Automated method of patch number")]
@@ -40,13 +47,14 @@ namespace Skyzi000.AutoVersioning.Editor
         public AutoVersioningMethod autoPatchNumberingMethod;
 
 #if ODIN_INSPECTOR
-        [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"),
-         MinValue(0), OnInspectorInit(nameof(LoadBundleVersion))]
+        [ShowInInspector, HorizontalGroup("BundleVersion", LabelWidth = 40, MaxWidth = 100, Title = "BundleVersion"), DisableIf(nameof(autoLoading)),
+         MinValue(0), OnInspectorInit(nameof(LoadBundleVersion)), ValidateInput(nameof(SetBundleVersion), SetSmallerNumberWarnMessage, InfoMessageType.Warning)]
 #endif
         private int _major, _minor;
 
 #if ODIN_INSPECTOR
-        [ShowInInspector, HorizontalGroup("BundleVersion"), MinValue(0), DisableIf(nameof(AutoPatchNumberingEnabled))]
+        [ShowInInspector, HorizontalGroup("BundleVersion"), MinValue(0), EnableIf(nameof(CanManualChangePatchNumber)),
+         ValidateInput(nameof(SetBundleVersion), SetSmallerNumberWarnMessage, InfoMessageType.Warning)]
 #endif
         private int _patch;
 
@@ -54,6 +62,8 @@ namespace Skyzi000.AutoVersioning.Editor
         /// ビルド番号の自動化が有効か
         /// </summary>
         public bool AutoIosBuildNumberingEnabled => autoIosBuildNumberingMethod != AutoVersioningMethod.None;
+
+        private bool CanManualChangeIosBuildNumber => !AutoIosBuildNumberingEnabled && !autoLoading;
 
 #if ODIN_INSPECTOR
         [LabelText("iOS Build Numbering"), SerializeField, Tooltip("Automated method of Build number for iOS")]
@@ -63,14 +73,24 @@ namespace Skyzi000.AutoVersioning.Editor
         public AutoVersioningMethod autoIosBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
 #if ODIN_INSPECTOR
-        [ShowInInspector, MinValue(0), ShowIf(nameof(AutoIosBuildNumberingEnabled)), ReadOnly]
+        [ShowInInspector, MinValue(0), EnableIf(nameof(CanManualChangeIosBuildNumber)),
+         ValidateInput(nameof(SetIosBuildNumber), SetSmallerNumberWarnMessage, InfoMessageType.Warning)]
 #endif
         private int _iosBuildNumber;
+
+        private bool SetIosBuildNumber()
+        {
+            var parse = int.TryParse(PlayerSettings.iOS.buildNumber, out var before);
+            PlayerSettings.iOS.buildNumber = _iosBuildNumber.ToString();
+            return !parse || _iosBuildNumber >= before;
+        }
 
         /// <summary>
         /// ビルド番号の自動化が有効か
         /// </summary>
         public bool AutoAndroidBuildNumberingEnabled => autoAndroidBuildNumberingMethod != AutoVersioningMethod.None;
+
+        private bool CanManualChangeAndroidBuildNumber => !AutoAndroidBuildNumberingEnabled && !autoLoading;
 
 #if ODIN_INSPECTOR
         [LabelText("Bundle Version Code Numbering"), SerializeField, Tooltip("Automated method of Bundle Version Code for Android")]
@@ -80,9 +100,17 @@ namespace Skyzi000.AutoVersioning.Editor
         public AutoVersioningMethod autoAndroidBuildNumberingMethod = AutoVersioningMethod.CountGitCommits;
 
 #if ODIN_INSPECTOR
-        [ShowInInspector, MinValue(0), ShowIf(nameof(AutoAndroidBuildNumberingEnabled)), ReadOnly]
+        [ShowInInspector, MinValue(0), EnableIf(nameof(CanManualChangeAndroidBuildNumber)),
+         ValidateInput(nameof(SetAndroidBundleVersionCode), SetSmallerNumberWarnMessage, InfoMessageType.Warning)]
 #endif
         private int _androidBundleVersionCode;
+
+        private bool SetAndroidBundleVersionCode()
+        {
+            var before = PlayerSettings.Android.bundleVersionCode;
+            PlayerSettings.Android.bundleVersionCode = _androidBundleVersionCode;
+            return _androidBundleVersionCode >= before;
+        }
 
         [SerializeField, Tooltip("Patterns of tags to be covered by the CountGitCommitsFromLastVersionTag method.")]
         private string gitTagPattern = "*[0-9].[0-9]*";
@@ -126,6 +154,9 @@ namespace Skyzi000.AutoVersioning.Editor
         [SerializeField, Tooltip("How many characters to save the hash"), Range(1, 40, order = 1)]
 #endif
         private int saveHashLength = 7;
+
+        [SerializeField, Tooltip("Automatically loads according to the settings. Disable when manually changing version information.")]
+        private bool autoLoading = true;
 
         [SerializeField, Tooltip("Automatically save this setting when it is changed in the editor.")]
         private bool autoSaveVersioningSettings = true;
@@ -174,7 +205,7 @@ namespace Skyzi000.AutoVersioning.Editor
         private bool warnIfOdinInspectorMissing = true;
 #pragma warning restore CS0414
 
-        private void OnEnable() => ApplyBuildNumbers();
+        private void OnEnable() => GetBuildNumbers();
 
         private void OnValidate()
         {
@@ -185,7 +216,12 @@ namespace Skyzi000.AutoVersioning.Editor
                                  "Without OdinInspector, the UI for VersioningSettings and VersionData in the Inspector will be inconvenient, " +
                                  "but the main functionality will not be affected.");
 #endif
-            ApplyBuildNumbers();
+            if (autoLoading)
+            {
+                LoadBundleVersion();
+                GetBuildNumbers();
+            }
+
             if (autoSaveVersioningSettings)
                 SaveVersioningSettings();
         }
@@ -214,6 +250,23 @@ namespace Skyzi000.AutoVersioning.Editor
             return GitCommandExecutor.ValidateGitPath(gitPath);
         }
 
+        private bool SetBundleVersion()
+        {
+            (int major, int minor, int patch) before = (0, 0, 0);
+            try
+            {
+                before = ParseBundleVersion();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Failed to parse bundleVersion.");
+                Debug.LogException(e);
+            }
+
+            PlayerSettings.bundleVersion = $"{_major.ToString()}.{_minor.ToString()}.{_patch.ToString()}";
+            return _major >= before.major && _minor >= before.minor && _patch >= before.patch;
+        }
+
         /// <summary>
         /// この設定のみを保存する
         /// </summary>
@@ -230,11 +283,11 @@ namespace Skyzi000.AutoVersioning.Editor
 #endif
         private void SavePlayerSettings()
         {
-            PlayerSettings.bundleVersion = $"{_major.ToString()}.{_minor.ToString()}.{_patch.ToString()}";
+            SetBundleVersion();
             if (AutoIosBuildNumberingEnabled)
-                PlayerSettings.iOS.buildNumber = _iosBuildNumber.ToString();
+                SetIosBuildNumber();
             if (AutoAndroidBuildNumberingEnabled)
-                PlayerSettings.Android.bundleVersionCode = _androidBundleVersionCode;
+                SetAndroidBundleVersionCode();
             AssetDatabase.SaveAssets();
         }
 
@@ -250,7 +303,7 @@ namespace Skyzi000.AutoVersioning.Editor
             if (settings.autoSaveVersionData == false)
                 return;
             settings.LoadBundleVersion();
-            settings.ApplyBuildNumbers();
+            settings.GetBuildNumbers();
             settings.SaveVersionData();
         }
 
@@ -260,7 +313,7 @@ namespace Skyzi000.AutoVersioning.Editor
         public void LoadAndSaveAll()
         {
             LoadBundleVersion();
-            ApplyBuildNumbers();
+            GetBuildNumbers();
             SavePlayerSettings();
             if (autoSaveVersionData)
                 SaveVersionData();
@@ -286,26 +339,27 @@ namespace Skyzi000.AutoVersioning.Editor
             }
             catch (Exception e)
             {
-                Debug.LogError("Could not interpret the version number from bundleVersion.");
+                Debug.LogError("Failed to parse bundleVersion.");
                 Debug.LogException(e);
                 return;
             }
+
             try
             {
                 _patch = GetBuildNumber(autoPatchNumberingMethod, _patch, gitTagPattern);
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to get patch number.\nTry creating a git repository or changing {nameof(autoPatchNumberingMethod)} to None.");
+                Debug.LogError($"Failed to get patch number.\n" +
+                               $"Try creating a git repository or changing {nameof(autoPatchNumberingMethod)} to None.");
                 Debug.LogException(e);
-                return;
             }
         }
 
         /// <summary>
-        /// パッチ番号やビルド番号等を取得し、フィールドに適用する
+        /// ビルド番号等を取得し、フィールドに適用する
         /// </summary>
-        private void ApplyBuildNumbers()
+        private void GetBuildNumbers()
         {
             try
             {
@@ -313,18 +367,22 @@ namespace Skyzi000.AutoVersioning.Editor
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to get ios build number.\nTry creating a git repository or changing {nameof(autoIosBuildNumberingMethod)} to None.");
+                Debug.LogError($"Failed to get ios build number.\n" +
+                               $"Try creating a git repository or changing {nameof(autoIosBuildNumberingMethod)} to None.");
                 Debug.LogException(e);
                 return;
             }
+
             try
             {
                 _androidBundleVersionCode = GetBuildNumber(autoAndroidBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode, gitTagPattern);
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to get android bundle version code.\nTry creating a git repository or changing {nameof(autoAndroidBuildNumberingMethod)} to None.");
+                Debug.LogError($"Failed to get android bundle version code.\n" +
+                               $"Try creating a git repository or changing {nameof(autoAndroidBuildNumberingMethod)} to None.");
                 Debug.LogException(e);
+                // ReSharper disable once RedundantJumpStatement
                 return;
             }
         }
