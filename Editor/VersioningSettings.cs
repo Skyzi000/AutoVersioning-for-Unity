@@ -276,7 +276,8 @@ namespace Skyzi000.AutoVersioning.Editor
             if (!AutoPatchNumberingEnabled)
                 _patch = 0;
             SetBundleVersion();
-            // TODO: コミットしてタグを作成する
+            AssetDatabase.SaveAssets();
+            // TODO: npmのようにコミットしてタグを作成する機能があっても良いかもしれない
         }
 
         [ButtonGroup("VersionUp")]
@@ -287,6 +288,7 @@ namespace Skyzi000.AutoVersioning.Editor
             if (!AutoPatchNumberingEnabled)
                 _patch = 0;
             SetBundleVersion();
+            AssetDatabase.SaveAssets();
         }
 
         [ButtonGroup("VersionUp"), DisableIf(nameof(AutoPatchNumberingEnabled))]
@@ -295,6 +297,7 @@ namespace Skyzi000.AutoVersioning.Editor
             LoadBundleVersion();
             _patch++;
             SetBundleVersion();
+            AssetDatabase.SaveAssets();
         }
 
         /// <summary>
@@ -518,6 +521,55 @@ namespace Skyzi000.AutoVersioning.Editor
             AssetDatabase.CreateAsset(CreateInstance<VersioningSettings>(), path);
             Debug.Log($"Create a new {nameof(VersioningSettings)}: '{path}'");
             return LoadSettings(directoryPath) ?? throw new InvalidOperationException($"Failed to create {nameof(VersioningSettings)}.");
+        }
+
+        [MenuItem("Tools/AutoVersioning/Major Version Up")]
+        private static void MajorVersionUpMenu()
+        {
+            VersioningSettings? settings = LoadSettings();
+            if (settings == null)
+            {
+                Debug.LogError("Please create the settings first.");
+                return;
+            }
+            settings.MajorVersionUp();
+        }
+
+        [MenuItem("Tools/AutoVersioning/Minor Version Up")]
+        private static void MinorVersionUpMenu()
+        {
+            VersioningSettings? settings = LoadSettings();
+            if (settings == null)
+            {
+                Debug.LogError("Please create the settings first.");
+                return;
+            }
+            settings.MinorVersionUp();
+        }
+
+        [MenuItem("Tools/AutoVersioning/Patch Version Up")]
+        private static void PatchVersionUpMenu()
+        {
+            VersioningSettings? settings = LoadSettings();
+            if (settings == null)
+            {
+                Debug.LogError("Please create the settings first.");
+                return;
+            }
+            settings.PatchVersionUp();
+        }
+
+        [MenuItem("Tools/AutoVersioning/Major Version Up", true)]
+        private static bool ValidateMajorVersionUpMenu() => LoadSettings() != null;
+
+        [MenuItem("Tools/AutoVersioning/Minor Version Up", true)]
+        private static bool ValidateMinorVersionUpMenu() => LoadSettings() != null;
+
+        [MenuItem("Tools/AutoVersioning/Patch Version Up", true)]
+        private static bool ValidatePatchVersionUpMenu()
+        {
+            VersioningSettings? settings = LoadSettings();
+            return settings != null && !settings.AutoPatchNumberingEnabled;
         }
 
         /// <summary>
