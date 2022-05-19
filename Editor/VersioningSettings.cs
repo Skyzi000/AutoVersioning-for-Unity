@@ -30,6 +30,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <summary>
         /// 前回より小さい値を入力した場合の警告メッセージ
         /// </summary>
+        // ReSharper disable once UnusedMember.Local
         private const string SetSmallerNumberWarnMessage = "It's smaller than the last number, is that okay?";
 
         /// <summary>
@@ -37,6 +38,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoPatchNumberingEnabled => autoPatchNumberingMethod != AutoVersioningMethod.None;
 
+        // ReSharper disable once UnusedMember.Local
         private bool CanManualChangePatchNumber => !AutoPatchNumberingEnabled && !autoLoading;
 
 #if ODIN_INSPECTOR
@@ -63,6 +65,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoIosBuildNumberingEnabled => autoIosBuildNumberingMethod != AutoVersioningMethod.None;
 
+        // ReSharper disable once UnusedMember.Local
         private bool CanManualChangeIosBuildNumber => !AutoIosBuildNumberingEnabled && !autoLoading;
 
 #if ODIN_INSPECTOR
@@ -78,6 +81,7 @@ namespace Skyzi000.AutoVersioning.Editor
 #endif
         private int _iosBuildNumber;
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool SetIosBuildNumber()
         {
             var parse = int.TryParse(PlayerSettings.iOS.buildNumber, out var before);
@@ -90,6 +94,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         public bool AutoAndroidBuildNumberingEnabled => autoAndroidBuildNumberingMethod != AutoVersioningMethod.None;
 
+        // ReSharper disable once UnusedMember.Local
         private bool CanManualChangeAndroidBuildNumber => !AutoAndroidBuildNumberingEnabled && !autoLoading;
 
 #if ODIN_INSPECTOR
@@ -105,6 +110,7 @@ namespace Skyzi000.AutoVersioning.Editor
 #endif
         private int _androidBundleVersionCode;
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool SetAndroidBundleVersionCode()
         {
             var before = PlayerSettings.Android.bundleVersionCode;
@@ -164,6 +170,7 @@ namespace Skyzi000.AutoVersioning.Editor
 #if ODIN_INSPECTOR
         [ShowInInspector, ReadOnly]
 #endif
+        // ReSharper disable once UnusedMember.Local
         private string GitVersion
         {
             get
@@ -230,6 +237,7 @@ namespace Skyzi000.AutoVersioning.Editor
         /// <see cref="gitPath"/>を検証し、使えるなら適用する
         /// </summary>
         /// <returns>使えるか、既に適用済みならtrue</returns>
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool ValidateAndApplyGitPath()
         {
             if (_gitExecutor.GitPath == gitPath)
@@ -250,6 +258,7 @@ namespace Skyzi000.AutoVersioning.Editor
             return GitCommandExecutor.ValidateGitPath(gitPath);
         }
 
+        // ReSharper disable once UnusedMethodReturnValue.Local
         private bool SetBundleVersion()
         {
             (int major, int minor, int patch) before = (0, 0, 0);
