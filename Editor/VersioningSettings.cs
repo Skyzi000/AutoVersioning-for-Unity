@@ -267,7 +267,9 @@ namespace Skyzi000.AutoVersioning.Editor
             return _major >= before.major && _minor >= before.minor && _patch >= before.patch;
         }
 
+#if ODIN_INSPECTOR
         [ButtonGroup("VersionUp")]
+#endif
         private void MajorVersionUp()
         {
             LoadBundleVersion();
@@ -280,7 +282,9 @@ namespace Skyzi000.AutoVersioning.Editor
             // TODO: npmのようにコミットしてタグを作成する機能があっても良いかもしれない
         }
 
+#if ODIN_INSPECTOR
         [ButtonGroup("VersionUp")]
+#endif
         private void MinorVersionUp()
         {
             LoadBundleVersion();
@@ -291,7 +295,9 @@ namespace Skyzi000.AutoVersioning.Editor
             AssetDatabase.SaveAssets();
         }
 
+#if ODIN_INSPECTOR
         [ButtonGroup("VersionUp"), DisableIf(nameof(AutoPatchNumberingEnabled))]
+#endif
         private void PatchVersionUp()
         {
             LoadBundleVersion();
@@ -532,6 +538,7 @@ namespace Skyzi000.AutoVersioning.Editor
                 Debug.LogError("Please create the settings first.");
                 return;
             }
+
             settings.MajorVersionUp();
         }
 
@@ -544,6 +551,7 @@ namespace Skyzi000.AutoVersioning.Editor
                 Debug.LogError("Please create the settings first.");
                 return;
             }
+
             settings.MinorVersionUp();
         }
 
@@ -556,6 +564,7 @@ namespace Skyzi000.AutoVersioning.Editor
                 Debug.LogError("Please create the settings first.");
                 return;
             }
+
             settings.PatchVersionUp();
         }
 
