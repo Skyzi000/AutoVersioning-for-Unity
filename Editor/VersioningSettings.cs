@@ -283,12 +283,22 @@ namespace Skyzi000.AutoVersioning.Editor
             try
             {
                 (_major, _minor, _patch) = ParseBundleVersion();
-                _patch = GetBuildNumber(autoPatchNumberingMethod, _patch, gitTagPattern);
             }
             catch (Exception e)
             {
                 Debug.LogError("Could not interpret the version number from bundleVersion.");
                 Debug.LogException(e);
+                return;
+            }
+            try
+            {
+                _patch = GetBuildNumber(autoPatchNumberingMethod, _patch, gitTagPattern);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to get patch number.\nTry creating a git repository or changing {nameof(autoPatchNumberingMethod)} to None.");
+                Debug.LogException(e);
+                return;
             }
         }
 
@@ -297,8 +307,26 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         private void ApplyBuildNumbers()
         {
-            _iosBuildNumber = GetBuildNumber(autoIosBuildNumberingMethod, int.Parse(PlayerSettings.iOS.buildNumber), gitTagPattern);
-            _androidBundleVersionCode = GetBuildNumber(autoAndroidBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode, gitTagPattern);
+            try
+            {
+                _iosBuildNumber = GetBuildNumber(autoIosBuildNumberingMethod, int.Parse(PlayerSettings.iOS.buildNumber), gitTagPattern);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to get ios build number.\nTry creating a git repository or changing {nameof(autoIosBuildNumberingMethod)} to None.");
+                Debug.LogException(e);
+                return;
+            }
+            try
+            {
+                _androidBundleVersionCode = GetBuildNumber(autoAndroidBuildNumberingMethod, PlayerSettings.Android.bundleVersionCode, gitTagPattern);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to get android bundle version code.\nTry creating a git repository or changing {nameof(autoAndroidBuildNumberingMethod)} to None.");
+                Debug.LogException(e);
+                return;
+            }
         }
 
         private VersionData SetData(VersionData data)
