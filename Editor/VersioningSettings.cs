@@ -273,7 +273,8 @@ namespace Skyzi000.AutoVersioning.Editor
             LoadBundleVersion();
             _major++;
             _minor = 0;
-            _patch = 0;
+            if (!AutoPatchNumberingEnabled)
+                _patch = 0;
             SetBundleVersion();
             // TODO: コミットしてタグを作成する
         }
@@ -283,7 +284,8 @@ namespace Skyzi000.AutoVersioning.Editor
         {
             LoadBundleVersion();
             _minor++;
-            _patch = 0;
+            if (!AutoPatchNumberingEnabled)
+                _patch = 0;
             SetBundleVersion();
         }
 
