@@ -267,6 +267,34 @@ namespace Skyzi000.AutoVersioning.Editor
             return _major >= before.major && _minor >= before.minor && _patch >= before.patch;
         }
 
+        [ButtonGroup("VersionUp")]
+        private void MajorVersionUp()
+        {
+            LoadBundleVersion();
+            _major++;
+            _minor = 0;
+            _patch = 0;
+            SetBundleVersion();
+            // TODO: コミットしてタグを作成する
+        }
+
+        [ButtonGroup("VersionUp")]
+        private void MinorVersionUp()
+        {
+            LoadBundleVersion();
+            _minor++;
+            _patch = 0;
+            SetBundleVersion();
+        }
+
+        [ButtonGroup("VersionUp"), DisableIf(nameof(AutoPatchNumberingEnabled))]
+        private void PatchVersionUp()
+        {
+            LoadBundleVersion();
+            _patch++;
+            SetBundleVersion();
+        }
+
         /// <summary>
         /// この設定のみを保存する
         /// </summary>
