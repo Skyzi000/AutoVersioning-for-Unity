@@ -435,7 +435,21 @@ namespace Skyzi000.AutoVersioning.Editor
             }
         }
 
-        private VersionData SetData(VersionData data)
+        /// <summary>
+        /// 現在の設定をもとにした<see cref="VersionData"/>インスタンスを新規作成する
+        /// </summary>
+        public VersionData GetVersionData()
+        {
+            LoadBundleVersion();
+            GetBuildNumbers();
+            var data = CreateInstance<VersionData>();
+            return SetVersionData(data);
+        }
+
+        /// <summary>
+        /// 現在の設定をもとに<see cref="VersionData"/>の内容を更新する
+        /// </summary>
+        private VersionData SetVersionData(VersionData data)
         {
             data.major = _major;
             data.minor = _minor;
@@ -453,22 +467,22 @@ namespace Skyzi000.AutoVersioning.Editor
         {
             if (File.Exists(versionDataPath))
             {
-                VersionData data = SetData(AssetDatabase.LoadAssetAtPath<VersionData>(versionDataPath));
+                VersionData data = SetVersionData(AssetDatabase.LoadAssetAtPath<VersionData>(versionDataPath));
                 EditorUtility.SetDirty(data);
                 AssetDatabase.SaveAssetIfDirty(data);
             }
             else
             {
-                CreateVersionData();
+                CreateVersionDataAsset();
                 if (createGitIgnoreForVersionData)
                     CreateGitIgnoreFile(versionDataPath);
                 Debug.Log($"Create a new {nameof(VersionData)} since it did not exist: '{versionDataPath}'");
             }
         }
 
-        private void CreateVersionData()
+        private void CreateVersionDataAsset()
         {
-            VersionData data = SetData(CreateInstance<VersionData>());
+            VersionData data = GetVersionData();
             Directory.CreateDirectory(versionDataPath);
             AssetDatabase.CreateAsset(data, versionDataPath);
         }
