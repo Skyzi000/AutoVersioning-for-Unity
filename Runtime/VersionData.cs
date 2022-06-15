@@ -14,9 +14,12 @@ namespace Skyzi000.AutoVersioning.Runtime
     public class VersionData : ScriptableObject
     {
         /// <summary>
-        /// デフォルトの生成位置であることを前提として、VersionDataを読み込む
+        /// デフォルトの生成位置に保存されていることを前提としてVersionDataを読み込みキャッシュする
         /// </summary>
-        public static VersionData Default => Resources.Load<VersionData>(nameof(VersionData));
+        /// <remarks>保存されていなければnull</remarks>
+        public static VersionData Default => _default != null ? _default : _default = Resources.Load<VersionData>(nameof(VersionData));
+
+        private static VersionData? _default = null;
 
 #if ODIN_INSPECTOR
         [ReadOnly]
