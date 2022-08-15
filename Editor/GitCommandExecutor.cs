@@ -74,21 +74,23 @@ namespace Skyzi000.AutoVersioning.Editor
         /// </summary>
         /// <param name="length">ハッシュ値の長さ。0~40が有効、7でgitの`--format=%h`指定に相当</param>
         /// <param name="commit">指定するコミット。デフォルトは"HEAD"</param>
-        /// <exception cref="ArgumentOutOfRangeException">Gitから帰ってきたハッシュ値か、引数<see cref="length"/>の値がおかしい場合</exception>
         public string GetCommitHash(int length = 7, string commit = "HEAD")
         {
             var hash = GitExec($"show \"{commit}\" --format=%H -s").Trim();
             if (0 > length || length > hash.Length)
-                throw new ArgumentOutOfRangeException(nameof(length), $"The hash length(raw: {hash.Length}, arg: {length}) is wrong.");
+                Debug.LogException(new ArgumentOutOfRangeException(nameof(length), $"The hash length(raw: {hash.Length}, arg: {length}) is wrong."));
             return length == hash.Length ? hash : hash.Substring(0, length);
         }
 
         /// <summary>
         /// Gitコマンドを実行して結果を返す
         /// </summary>
+        /// <remarks>
+        /// <see cref="GitPath"/>が<see cref="DefaultGitPath"/>と異なる状態で例外が発生した場合、自動的に<see cref="DefaultGitPath"/>でリトライする。
+        /// それでも例外が発生した場合は、空文字列を返す。
+        /// </remarks>
         /// <param name="commands">gitのサブコマンドやオプション</param>
         /// <returns>標準出力</returns>
-        /// <exception cref="InvalidOperationException">実行できなかった場合や、Gitが正常終了しなかった場合</exception>
         public string GitExec(string commands)
         {
             try
@@ -99,12 +101,20 @@ namespace Skyzi000.AutoVersioning.Editor
             {
                 if (GitPath == DefaultGitPath)
                 {
-                    Debug.LogWarning("Failed to execute Git. Please make sure you have installed Git and added Path.");
-                    throw;
+                    Debug.LogError("Failed to execute Git. Please make sure you have installed Git and added Path.");
+                    return "";
                 }
 
                 Debug.LogWarning("Failed to execute Git. Retrying with default Git path.");
-                return GitExec(commands, DefaultGitPath);
+                try
+                {
+                    return GitExec(commands, DefaultGitPath);
+                }
+                catch (Exception)
+                {
+                    Debug.LogError("Failed to execute Git. Please make sure you have installed Git and added Path.");
+                    return "";
+                }
             }
         }
 
