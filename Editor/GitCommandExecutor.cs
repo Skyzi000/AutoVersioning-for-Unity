@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 #nullable enable
@@ -98,22 +99,30 @@ namespace Skyzi000.AutoVersioning.Editor
             {
                 return GitExec(commands, GitPath);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Debug.LogException(e);
                 if (GitPath == DefaultGitPath)
                 {
-                    Debug.LogError("Failed to execute Git. Please make sure you have installed Git and added Path.");
+                    Debug.LogError(Application.systemLanguage == SystemLanguage.Japanese
+                        ? "Gitの実行に失敗しました。Gitのパスが正しいこと、ローカルリポジトリに一つ以上のコミットが存在することを確認してください。"
+                        : "Git execution failed. Please make sure that the Git path is correct and that one or more commits exist in the local repository.");
                     return "";
                 }
 
-                Debug.LogWarning("Failed to execute Git. Retrying with default Git path.");
+                Debug.LogWarning(Application.systemLanguage == SystemLanguage.Japanese
+                    ? $"Git({GitPath})の実行に失敗しました。デフォルトのGitパスでリトライします..."
+                    : $"Git({GitPath}) execution failed. Retrying with default Git path...");
                 try
                 {
                     return GitExec(commands, DefaultGitPath);
                 }
-                catch (Exception)
+                catch (Exception e2)
                 {
-                    Debug.LogError("Failed to execute Git. Please make sure you have installed Git and added Path.");
+                    Debug.LogException(e2);
+                    Debug.LogError(Application.systemLanguage == SystemLanguage.Japanese
+                        ? "Gitの実行に失敗しました。Gitのパスが正しいこと、ローカルリポジトリに一つ以上のコミットが存在することを確認してください。"
+                        : "Git execution failed. Please make sure that the Git path is correct and that one or more commits exist in the local repository.");
                     return "";
                 }
             }
