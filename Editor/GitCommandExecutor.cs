@@ -77,9 +77,10 @@ namespace Skyzi000.AutoVersioning.Editor
         public string GetCommitHash(int length = 7, string commit = "HEAD")
         {
             var hash = GitExec($"show \"{commit}\" --format=%H -s").Trim();
-            if (0 > length || length > hash.Length)
-                Debug.LogException(new ArgumentOutOfRangeException(nameof(length), $"The hash length(raw: {hash.Length}, arg: {length}) is wrong."));
-            return length == hash.Length ? hash : hash.Substring(0, length);
+            if (0 <= length && length <= hash.Length)
+                return length == hash.Length ? hash : hash.Substring(0, length);
+            Debug.LogException(new ArgumentOutOfRangeException(nameof(length), $"The hash length(raw: {hash.Length}, arg: {length}) is wrong."));
+            return hash;
         }
 
         /// <summary>
