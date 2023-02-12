@@ -84,6 +84,7 @@ namespace Skyzi000.AutoVersioning.Editor
             return hash;
         }
 
+        // TODO: TryGitExecを作り、GitExecのリトライ機能をそちらに移し、GitExecは例外をそのまま返すようにする
         /// <summary>
         /// Gitコマンドを実行して結果を返す
         /// </summary>
