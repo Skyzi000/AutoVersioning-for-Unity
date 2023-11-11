@@ -483,7 +483,9 @@ namespace Skyzi000.AutoVersioning.Editor
         private void CreateVersionDataAsset()
         {
             VersionData data = GetVersionData();
-            Directory.CreateDirectory(versionDataPath);
+            var directoryPath = Path.GetDirectoryName(versionDataPath);
+            if (directoryPath != null && !Directory.Exists(directoryPath))
+                Directory.CreateDirectory(directoryPath);
             AssetDatabase.CreateAsset(data, versionDataPath);
         }
 
