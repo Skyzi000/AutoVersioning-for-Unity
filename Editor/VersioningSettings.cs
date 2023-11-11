@@ -546,7 +546,8 @@ namespace Skyzi000.AutoVersioning.Editor
         public static VersioningSettings CreateSettings(string? directoryPath = DirectoryPath)
         {
             var path = GetPath(directoryPath);
-            Directory.CreateDirectory(path);
+            if (directoryPath != null && !Directory.Exists(directoryPath))
+                Directory.CreateDirectory(directoryPath);
             AssetDatabase.CreateAsset(CreateInstance<VersioningSettings>(), path);
             Debug.Log($"Create a new {nameof(VersioningSettings)}: '{path}'");
             return LoadSettings(directoryPath) ?? throw new InvalidOperationException($"Failed to create {nameof(VersioningSettings)}.");
